@@ -55,5 +55,18 @@ int main()
         rejected = true;
     }
     CHECK(rejected);
+    for (const auto *shares : {"55340232221129.054848", "18446744073709.551616"})
+    {
+        rejected = false;
+        try
+        {
+            limitless::limit_amounts(limitless::Side::Buy, "0.5", shares);
+        }
+        catch (const std::invalid_argument &)
+        {
+            rejected = true;
+        }
+        CHECK(rejected);
+    }
     RETURN_TEST();
 }

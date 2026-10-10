@@ -1,7 +1,9 @@
 #include "check.hpp"
 #include "limitless/orderbook.hpp"
 
+#include <limits>
 #include <nlohmann/json.hpp>
+#include <stdexcept>
 
 int main()
 {
@@ -60,5 +62,55 @@ int main()
     auto fallback = live;
     fallback["version"] = 0;
     CHECK(!book.apply_update(fallback));
+    auto invalid = live;
+    invalid["version"] = 3;
+    for (const auto &price : {nlohmann::json(-0.1), nlohmann::json(std::numeric_limits<double>::infinity())})
+    {
+        invalid["orderbook"]["bids"][0]["price"] = price;
+        bool rejected = false;
+        try
+        {
+            book.apply_update(invalid);
+        }
+        catch (const std::invalid_argument &)
+        {
+            rejected = true;
+        }
+        CHECK(rejected);
+        CHECK(book.version == 2 && book.best_bid()->price == 0.4);
+    }
+    for (const auto &size : {nlohmann::json("-1"), nlohmann::json(1.5), nlohmann::json(1e30)})
+    {
+        invalid = live;
+        invalid["version"] = 3;
+        invalid["orderbook"]["bids"][0]["size"] = size;
+        bool rejected = false;
+        try
+        {
+            book.apply_update(invalid);
+        }
+        catch (const std::invalid_argument &)
+        {
+            rejected = true;
+        }
+        CHECK(rejected);
+        CHECK(book.version == 2);
+    }
+    invalid = live;
+    invalid["orderbook"]["bids"].push_back(invalid["orderbook"]["bids"][0]);
+    bool rejected = false;
+    try
+    {
+        limitless::OrderBook::parse_update(invalid);
+    }
+    catch (const std::invalid_argument &)
+    {
+        rejected = true;
+    }
+    CHECK(rejected);
+    auto unsorted = limitless::OrderBook::parse_rest(body);
+    unsorted.asks = {{0.7, "1", "SELL"}, {0.6, "2", "SELL"}};
+    const auto inverted = limitless::derive_no_book(unsorted);
+    CHECK(inverted.bids.front().size_raw == "2");
     RETURN_TEST();
 }
