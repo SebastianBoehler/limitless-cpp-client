@@ -12,7 +12,11 @@ namespace limitless
         {
             if (value.is_string())
             {
-                return value.get<std::string>();
+                const auto &text = value.get_ref<const std::string &>();
+                if (text.empty() ||
+                    !std::all_of(text.begin(), text.end(), [](char digit) { return digit >= '0' && digit <= '9'; }))
+                    throw std::invalid_argument("orderbook size must be an unsigned integer");
+                return text;
             }
             if (value.is_number_unsigned())
             {
@@ -20,16 +24,20 @@ namespace limitless
             }
             if (value.is_number_integer())
             {
-                return std::to_string(value.get<std::int64_t>());
+                const auto number = value.get<std::int64_t>();
+                if (number < 0)
+                    throw std::invalid_argument("orderbook size must be non-negative");
+                return std::to_string(number);
             }
             if (value.is_number_float())
             {
                 const double number = value.get<double>();
-                if (!std::isfinite(number))
+                if (!std::isfinite(number) || number < 0 || number >= std::ldexp(1.0, 63) ||
+                    std::trunc(number) != number)
                 {
-                    throw std::invalid_argument("orderbook size is not finite");
+                    throw std::invalid_argument("orderbook size must be a representable non-negative integer");
                 }
-                return std::to_string(static_cast<long long>(std::llround(number)));
+                return std::to_string(static_cast<long long>(number));
             }
             throw std::invalid_argument("orderbook size has an unexpected type");
         }
@@ -42,6 +50,8 @@ namespace limitless
             }
             BookLevel level;
             level.price = value["price"].get<double>();
+            if (!std::isfinite(level.price) || level.price < 0 || level.price > 1)
+                throw std::invalid_argument("orderbook price must be finite and in [0, 1]");
             level.size_raw = raw_from_json(value["size"]);
             if (value.contains("side") && value["side"].is_string())
             {
@@ -77,6 +87,10 @@ namespace limitless
             std::sort(book.asks.begin(), book.asks.end(), [](const BookLevel &left, const BookLevel &right) {
                 return left.price < right.price;
             });
+            for (const auto *levels : {&book.bids, &book.asks})
+                for (std::size_t i = 1; i < levels->size(); ++i)
+                    if ((*levels)[i - 1].price == (*levels)[i].price)
+                        throw std::invalid_argument("duplicate orderbook price");
         }
 
         void read_common(OrderBook &book, const nlohmann::json &body)
@@ -214,12 +228,13 @@ namespace limitless
             inverted.side = "SELL";
             no_book.asks.push_back(std::move(inverted));
         }
-        std::sort(no_book.bids.begin(), no_book.bids.end(), [](const BookLevel &left, const BookLevel &right) {
-            return left.price > right.price;
-        });
-        std::sort(no_book.asks.begin(), no_book.asks.end(), [](const BookLevel &left, const BookLevel &right) {
-            return left.price < right.price;
-        });
+        const auto descending = [](const BookLevel &left, const BookLevel &right) { return left.price > right.price; };
+        const auto ascending = [](const BookLevel &left, const BookLevel &right) { return left.price < right.price; };
+        // Parsed books preserve sorted order under complement. Public manually built books may not.
+        if (!std::is_sorted(no_book.bids.begin(), no_book.bids.end(), descending))
+            std::sort(no_book.bids.begin(), no_book.bids.end(), descending);
+        if (!std::is_sorted(no_book.asks.begin(), no_book.asks.end(), ascending))
+            std::sort(no_book.asks.begin(), no_book.asks.end(), ascending);
         return no_book;
     }
 

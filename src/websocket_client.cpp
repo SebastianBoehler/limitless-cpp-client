@@ -166,6 +166,11 @@ namespace limitless
             std::call_once(once, [] { ix::initNetSystem(); });
         }
 
+        ~Impl()
+        {
+            socket.stop();
+        }
+
         bool auth_window_open() const
         {
             return std::chrono::steady_clock::now() - handshake_at < std::chrono::seconds(25);
@@ -281,7 +286,6 @@ namespace limitless
                 }
                 EventCallback event_callback;
                 VoidCallback connect_callback;
-                SocketIoEvent event;
                 {
                     std::lock_guard<std::mutex> callback_lock(self->mutex);
                     if (packet.kind == SocketIoPacket::Kind::NamespaceConnect &&
@@ -294,7 +298,6 @@ namespace limitless
                     else if (packet.kind == SocketIoPacket::Kind::Event && packet.event)
                     {
                         event_callback = self->on_event;
-                        event = *packet.event;
                     }
                 }
                 if (connect_callback)
@@ -303,7 +306,7 @@ namespace limitless
                 }
                 if (event_callback && packet.kind == SocketIoPacket::Kind::Event)
                 {
-                    event_callback(event);
+                    event_callback(*packet.event);
                 }
                 return;
             }

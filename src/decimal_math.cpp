@@ -1,5 +1,6 @@
 #include "limitless/decimal_math.hpp"
 
+#include <limits>
 #include <stdexcept>
 
 namespace limitless
@@ -111,12 +112,12 @@ namespace limitless
             unsigned long long value = 0;
             for (char character : raw)
             {
-                const unsigned long long next = value * 10u + static_cast<unsigned>(character - '0');
-                if (next < value)
+                const auto digit = static_cast<unsigned>(character - '0');
+                if (value > (std::numeric_limits<unsigned long long>::max() - digit) / 10u)
                 {
                     throw std::invalid_argument("amount overflows");
                 }
-                value = next;
+                value = value * 10u + digit;
             }
             if (millis < 0)
             {

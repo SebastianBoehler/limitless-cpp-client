@@ -133,6 +133,8 @@ if(LIMITLESS_CLIENT_BUILD_TESTS)
     limitless_add_test(test_signer)
     limitless_add_test(test_orderbook)
     limitless_add_test(test_socketio)
+    limitless_add_test(test_socket_lifecycle)
+    target_link_libraries(test_socket_lifecycle PRIVATE ixwebsocket)
     limitless_add_test(test_prepare_order)
 endif()
 
@@ -144,3 +146,7 @@ install(TARGETS limitless_client
 )
 install(DIRECTORY include/limitless DESTINATION include)
 install(FILES LICENSE DESTINATION share/licenses/limitless_client)
+
+# Build explicitly; timings are diagnostic, not pass/fail tests.
+add_executable(limitless_hot_paths EXCLUDE_FROM_ALL benchmarks/hot_paths.cpp)
+target_link_libraries(limitless_hot_paths PRIVATE limitless::client)
