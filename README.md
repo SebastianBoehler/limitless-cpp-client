@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/banner.svg" alt="Limitless Exchange C++20 client" width="100%">
+
 # limitless-cpp-client
 
 **A C++20 client for Limitless Exchange.**<br>

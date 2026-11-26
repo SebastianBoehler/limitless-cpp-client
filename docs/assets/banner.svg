@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 252" role="img" aria-labelledby="title">
+  <title id="title">Limitless Exchange C++20 client</title>
+  <defs>
+    <linearGradient id="background" x2="100%">
+      <stop stop-color="#0d2229"/>
+      <stop offset="1" stop-color="#18484a"/>
+    </linearGradient>
+    <pattern id="grid" x="720" y="34" width="38" height="38" patternUnits="userSpaceOnUse">
+      <path d="M38 0H0V38" fill="none" stroke="#a0e6dc" stroke-opacity=".15"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="252" rx="16" fill="url(#background)"/>
+  <rect x="720" y="34" width="414" height="183" fill="url(#grid)"/>
+  <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" color="#65e1c7">
+    <path d="M728 180H775V164H823V141H866V151H914V108H957V122H1003V89H1047V70H1118" stroke="currentColor"/>
+    <path d="M728 80H775V96H823V119H866V109H914V152H957V138H1003V171H1047V190H1118" stroke="#c0dce9"/>
+    <circle cx="1118" cy="70" r="6" fill="currentColor" stroke="none"/>
+    <circle cx="1118" cy="190" r="6" fill="#c0dce9" stroke="none"/>
+    <path d="M728 130H1118" stroke="#a6dbdb" opacity=".3" stroke-dasharray="3 8"/>
+  </g>
+  <path d="M62 62H102" stroke="#65e1c7" stroke-width="4"/>
+  <g font-family="system-ui, -apple-system, sans-serif">
+    <text x="58" y="137" fill="#f4f7ff" font-size="66" font-weight="700" letter-spacing="-2">Limitless Exchange</text>
+    <text x="62" y="183" fill="#a0e6dc" font-size="25">C++20 client for Limitless Exchange on Base</text>
+  </g>
+</svg>
